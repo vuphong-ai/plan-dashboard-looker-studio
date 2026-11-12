@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Plan dashboard Looker Studio · PSP</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --ink: #17212f;
+    --muted: #5d6978;
+    --line: #e2e6eb;
+    --shade: #f0f2f5;
+    --accent: #1f4fd8;
+    --accent-soft: #dfe8ff;
+    --bar: #2f5fe0;
+    --bar-end: #16357f;
+    --bar-late: #8fa3c7;
+    --ask: #8a4b00;
+    --ask-bg: #fff3dc;
+    --ask-line: #f1c97a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151c;
+      --surface: #18202b;
+      --ink: #e7ecf2;
+      --muted: #9ba8b7;
+      --line: #2b3644;
+      --shade: #1e2733;
+      --accent: #8fb0ff;
+      --accent-soft: #1f2f52;
+      --bar: #5c86f2;
+      --bar-end: #b9ccff;
+      --bar-late: #4a5b78;
+      --ask: #ffd28a;
+      --ask-bg: #33280f;
+      --ask-line: #6b5320;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .page { max-width: 1040px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h2 { font-size: 17px; margin: 0 0 14px; letter-spacing: -0.005em; }
+  p { margin: 0 0 10px; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 4px 18px; margin-bottom: 18px; }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .lead { font-size: 16.5px; max-width: 760px; margin-bottom: 24px; }
+  section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 22px 20px;
+    margin-bottom: 16px;
+  }
+  .sub { color: var(--muted); font-size: 13.5px; margin: -8px 0 16px; }
+
+  /* Bàn giao */
+  .deliver { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+  .deliver div { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .deliver b { display: block; font-size: 14.5px; margin-bottom: 2px; }
+  .deliver span { color: var(--muted); font-size: 13px; line-height: 1.4; display: block; }
+
+  /* Gantt */
+  .scroll { overflow-x: auto; margin: 0 -6px; padding: 0 6px 4px; }
+  .gantt {
+    display: grid;
+    grid-template-columns: 210px repeat(18, minmax(27px, 1fr)) repeat(4, minmax(54px, 1.8fr));
+    grid-template-rows: auto auto auto repeat(6, 44px);
+    min-width: 930px;
+    position: relative;
+    font-size: 12.5px;
+  }
+  .gantt > * { min-width: 0; }
+  .wk { grid-row: 2 / 10; background: var(--shade); border-radius: 4px; }
+  .dec { grid-column: 20; grid-row: 1 / 10; border-left: 2px solid var(--line); }
+  .mon { grid-row: 1; text-align: center; font-weight: 600; color: var(--muted); padding: 0 0 6px; font-size: 12px; }
+  .dow { grid-row: 2; text-align: center; color: var(--muted); font-size: 11px; padding-top: 5px; z-index: 1; }
+  .day { grid-row: 3; text-align: center; font-weight: 600; padding: 0 0 7px; z-index: 1; border-bottom: 1px solid var(--line); }
+  .day.kr { color: var(--accent); }
+  .lbl { grid-column: 1; display: flex; align-items: center; gap: 8px; padding-right: 10px; font-size: 13.5px; line-height: 1.25; border-bottom: 1px solid var(--line); z-index: 3; position: sticky; left: 0; background: var(--surface); }
+  .lbl i { font-style: normal; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+  .rowline { grid-column: 2 / 24; border-bottom: 1px solid var(--line); }
+  .bar {
+    align-self: center; height: 24px; border-radius: 6px; z-index: 2;
+    background: var(--bar); color: #fff; font-weight: 600; font-size: 11.5px;
+    display: flex; align-items: center; justify-content: flex-end; padding: 0 3px 0 0; margin: 0 2px;
+  }
+  .bar em { font-style: normal; background: var(--bar-end); color: #fff; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+  .bar.late { background: var(--bar-late); }
+  @media (prefers-color-scheme: dark) { .bar em { color: #10151c; } .bar.late em { color: #10151c; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 12.5px; margin-top: 12px; }
+  .legend span::before { content: ""; display: inline-block; width: 22px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--bar); }
+  .legend .l2::before { background: var(--bar-end); }
+  .legend .l3::before { background: var(--bar-late); }
+  .legend .l4::before { background: var(--shade); border: 1px solid var(--line); }
+
+  /* Chi tiết mốc */
+  .ms { display: grid; grid-template-columns: 92px 1fr; gap: 0 18px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .ms:first-of-type { border-top: 0; padding-top: 2px; }
+  .ms:last-of-type { padding-bottom: 0; }
+  .when { font-weight: 700; font-size: 19px; line-height: 1.2; color: var(--accent); }
+  .when small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .ms h3 { font-size: 15.5px; margin: 0 0 6px; }
+  .ms ul { margin: 0 0 8px; padding-left: 18px; }
+  .ms li { margin-bottom: 3px; }
+  .out { color: var(--muted); font-size: 13.5px; }
+  .out b { color: var(--ink); font-weight: 600; }
+  .ask { display: inline-block; margin-top: 8px; background: var(--ask-bg); border: 1px solid var(--ask-line); color: var(--ask); border-radius: 8px; padding: 6px 11px; font-size: 13.5px; }
+  .ask b { font-weight: 700; }
+
+  /* Luồng dữ liệu */
+  .flow { display: grid; grid-template-columns: 1.25fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .box h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .box p { font-size: 13.5px; margin-bottom: 7px; line-height: 1.45; }
+  .box p:last-child { margin-bottom: 0; }
+  .box.hub { border-color: var(--accent); background: var(--accent-soft); }
+  .tag { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 4px; padding: 1px 6px; margin-right: 4px; background: var(--shade); color: var(--muted); }
+  .arrow { align-self: center; color: var(--muted); font-size: 20px; }
+
+  /* Cần chốt / lưu ý */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .two section { margin: 0; }
+  ol.dec-list, ul.note { margin: 0; padding-left: 20px; }
+  ol.dec-list li, ul.note li { margin-bottom: 10px; }
+  ol.dec-list li:last-child, ul.note li:last-child { margin-bottom: 0; }
+  section.need { border-color: var(--ask-line); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 18px; }
+
+  @media (max-width: 760px) {
+    h1 { font-size: 22px; }
+    section { padding: 18px 16px; }
+    .ms { grid-template-columns: 1fr; }
+    .when { margin-bottom: 6px; }
+    .when small { display: inline; margin-left: 8px; }
+    .flow { grid-template-columns: 1fr; }
+    .arrow { justify-self: center; transform: rotate(90deg); }
+    .two { grid-template-columns: 1fr; }
+  }
+  @media print {
+    body { background: #fff; }
+    section { break-inside: avoid; }
+    .gantt { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Plan chuẩn hóa dashboard Looker Studio cho dự án PSP</h1>
+  <div class="meta">
+    <span>Hạn KR: <b>30/11/2026</b></span>
+    <span>Phụ trách: <b>Phong</b></span>
+    <span>Follow: <b>anh Việt</b></span>
+    <span>Bản dự kiến ngày 12/11/2026</span>
+  </div>
+  <p class="lead">Đến 30/11, PSP có một bộ chuẩn report Looker Studio dùng chung cho hơn 20 dự án, và lệnh build dashboard nằm sẵn trong agentic workflow SEO Production. Các dự án còn lại rollout trong tháng 12.</p>
+
+  <section>
+    <h2>Bàn giao ngày 30/11</h2>
+    <div class="deliver">
+      <div><b>Template chung v1.0</b><span>Cho dự án SMEs, dùng được cho cả Enterprise. Đã chạy thử trên 2 dự án.</span></div>
+      <div><b>Khung customize</b><span>Cho dự án Enterprise: phần bắt buộc và các module tùy chọn.</span></div>
+      <div><b>Skill + rules</b><span>Trong SEO Production (CLAUDE.md / AGENTS.md), member ra lệnh là agent biết làm.</span></div>
+      <div><b>SOP + training</b><span>Cách tạo mới, cách cập nhật hằng tháng. 1 buổi training Team Leader có record.</span></div>
+      <div><b>Lịch rollout</b><span>Các dự án còn lại, chia theo team và theo đợt trong tháng 12.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Timeline</h2>
+    <p class="sub">Tháng 11 theo ngày, tháng 12 theo tuần. Bản chi tiết từng đầu việc: <a href="https://docs.google.com/spreadsheets/d/1A2e4A8PBN8Dsu2_Hvj6I1VE4sitl1X4ssBQdGDC8HjQ/edit?gid=1266769794#gid=1266769794">tab Timeline trên Google Sheet</a>.</p>
+    <div class="scroll">
+      <div class="gantt">
+        <!-- nền: cuối tuần + vạch tháng 12 -->
+        <div class="wk" style="grid-column:3/5"></div>
+        <div class="wk" style="grid-column:10/12"></div>
+        <div class="wk" style="grid-column:17/19"></div>
+        <div class="dec"></div>
+
+        <div class="mon" style="grid-column:2/20">Tháng 11</div>
+        <div class="mon" style="grid-column:20/24">Tháng 12</div>
+
+        <div class="dow" style="grid-column:2">T6</div><div class="dow" style="grid-column:3">T7</div><div class="dow" style="grid-column:4">CN</div>
+        <div class="dow" style="grid-column:5">T2</div><div class="dow" style="grid-column:6">T3</div><div class="dow" style="grid-column:7">T4</div>
+        <div class="dow" style="grid-column:8">T5</div><div class="dow" style="grid-column:9">T6</div><div class="dow" style="grid-column:10">T7</div>
+        <div class="dow" style="grid-column:11">CN</div><div class="dow" style="grid-column:12">T2</div><div class="dow" style="grid-column:13">T3</div>
+        <div class="dow" style="grid-column:14">T4</div><div class="dow" style="grid-column:15">T5</div><div class="dow" style="grid-column:16">T6</div>
+        <div class="dow" style="grid-column:17">T7</div><div class="dow" style="grid-column:18">CN</div><div class="dow" style="grid-column:19">T2</div>
+        <div class="dow" style="grid-column:20">Tuần 1</div><div class="dow" style="grid-column:21">Tuần 2</div><div class="dow" style="grid-column:22">Tuần 3</div><div class="dow" style="grid-column:23">Tuần 4</div>
+
+        <div class="day" style="grid-column:1"></div>
+        <div class="day" style="grid-column:2">13</div><div class="day" style="grid-column:3">14</div><div class="day" style="grid-column:4">15</div>
+        <div class="day" style="grid-column:5">16</div><div class="day" style="grid-column:6">17</div><div class="day" style="grid-column:7">18</div>
+        <div class="day" style="grid-column:8">19</div><div class="day" style="grid-column:9">20</div><div class="day" style="grid-column:10">21</div>
+        <div class="day" style="grid-column:11">22</div><div class="day" style="grid-column:12">23</div><div class="day" style="grid-column:13">24</div>
+        <div class="day" style="grid-column:14">25</div><div class="day" style="grid-column:15">26</div><div class="day" style="grid-column:16">27</div>
+        <div class="day" style="grid-column:17">28</div><div class="day" style="grid-column:18">29</div><div class="day kr" style="grid-column:19">30</div>
+        <div class="day" style="grid-column:20">1–7</div><div class="day" style="grid-column:21">8–15</div><div class="day" style="grid-column:22">16–23</div><div class="day" style="grid-column:23">24–31</div>
+
+        <div class="lbl" style="grid-row:4"><i>1</i>Chốt layout và test kỹ thuật</div>
+        <div class="rowline" style="grid-row:4"></div>
+        <div class="bar" style="grid-row:4;grid-column:2/7"><em>17/11</em></div>
+
+        <div class="lbl" style="grid-row:5"><i>2</i>Dựng khung, data hub, chạy thử</div>
+        <div class="rowline" style="grid-row:5"></div>
+        <div class="bar" style="grid-row:5;grid-column:7/12"><em>22/11</em></div>
+
+        <div class="lbl" style="grid-row:6"><i>3</i>Chốt template chung v1</div>
+        <div class="rowline" style="grid-row:6"></div>
+        <div class="bar" style="grid-row:6;grid-column:12/15"><em>25/11</em></div>
+
+        <div class="lbl" style="grid-row:7"><i>4</i>Tích hợp vào SEO Production</div>
+        <div class="rowline" style="grid-row:7"></div>
+        <div class="bar" style="grid-row:7;grid-column:14/17"><em>27/11</em></div>
+
+        <div class="lbl" style="grid-row:8"><i>5</i>Bàn giao</div>
+        <div class="rowline" style="grid-row:8"></div>
+        <div class="bar" style="grid-row:8;grid-column:16/20"><em>30/11</em></div>
+
+        <div class="lbl" style="grid-row:9"><i>6</i>Rollout các dự án còn lại</div>
+        <div class="rowline" style="grid-row:9"></div>
+        <div class="bar late" style="grid-row:9;grid-column:20/22"><em>Đợt 1 · 15/12</em></div>
+        <div class="bar late" style="grid-row:9;grid-column:22/24"><em>Đợt 2 · 31/12</em></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span>Thời gian làm</span>
+      <span class="l2">Hạn của mốc</span>
+      <span class="l3">Sau hạn KR (rollout)</span>
+      <span class="l4">Cuối tuần</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Chi tiết từng mốc</h2>
+
+    <div class="ms">
+      <div class="when">17/11<small>Thứ Ba</small></div>
+      <div>
+        <h3>1 · Chốt layout và test kỹ thuật</h3>
+        <ul>
+          <li>Gửi layout mô phỏng các trang cần có ở template chung.</li>
+          <li>Test kỹ thuật: SpySERP → Sheet, DataForSEO → Sheet, cách tự động copy template.</li>
+        </ul>
+        <div class="out"><b>Đầu ra:</b> layout các trang và kết luận làm được hay chưa cho từng hướng kỹ thuật.</div>
+        <div class="ask"><b>Cần anh:</b> duyệt layout template chung.</div>
+      </div>
+    </div>
+
+    <div class="ms">
+      <div class="when">22/11<small>Chủ nhật</small></div>
+      <div>
+        <h3>2 · Dựng khung dashboard, data hub và chạy thử</h3>
+        <ul>
+          <li>Setup khung dashboard trên Looker Studio. Các component lấy trực tiếp từ GSC, GA4 thì chạy tự động.</li>
+          <li>Dựng template Google Sheet làm data hub, gồm các tab: KPI dự án, Ranking, GEO tracking, Việc tháng tới. Cùng cấu trúc cho mọi dự án.</li>
+          <li>Script hoặc agent đổ số từ SpySERP, DataForSEO vào data hub. Phần nhận định, action tháng tới và ảnh chụp do lead hoặc agent soạn.</li>
+          <li>Chạy thử trên 2 dự án (1 SME, 1 Enterprise), viết thêm khung customize cho dự án Enterprise.</li>
+        </ul>
+        <div class="out"><b>Đầu ra:</b> khung dashboard và data hub mẫu, chạy trên 2 dự án thật. Dự án mới chỉ cần copy template và đổi nguồn data.</div>
+        <div class="ask"><b>Cần anh:</b> xem bản chạy thử và feedback trước 24/11.</div>
+      </div>
+    </div>
+
+    <div class="ms">
+      <div class="when">25/11<small>Thứ Tư</small></div>
+      <div>
+        <h3>3 · Chốt template chung v1</h3>
+        <ul>
+          <li>Gom feedback từ 2 dự án chạy thử và từ anh, sửa layout, component, cấu trúc data hub.</li>
+          <li>Kiểm tra trước khi chốt: không còn component lỗi kết nối, số KPI trên dashboard khớp số nghiệm thu, đổi khoảng ngày thì các bảng chạy đúng.</li>
+          <li>Khóa cấu trúc data hub (tên tab, tên cột), từ đây không đổi nữa.</li>
+          <li>Chốt khung customize cho dự án Enterprise: phần bắt buộc và danh sách module tùy chọn (thị trường, dòng sản phẩm, ảnh SERP, traffic AI...).</li>
+        </ul>
+        <div class="out"><b>Đầu ra:</b> template chung v1 và khung customize bản chốt.</div>
+      </div>
+    </div>
+
+    <div class="ms">
+      <div class="when">27/11<small>Thứ Sáu</small></div>
+      <div>
+        <h3>4 · Tích hợp vào agentic workflow SEO Production</h3>
+        <ul>
+          <li>Viết skill + rules (CLAUDE.md / AGENTS.md) cho lệnh <b>"Tạo dashboard cho dự án mới"</b>: agent copy data hub, điền cấu hình dự án, tạo link copy từ template.</li>
+          <li>Viết skill + rules cho lệnh <b>"Cập nhật dashboard tháng"</b>: agent đổ số Ranking, KPI, GEO vào data hub và soạn nháp nhận định, việc tháng tới để lead duyệt.</li>
+          <li>Cho 1 member tự chạy lệnh trên 1 dự án mới (không phải 2 dự án chạy thử), ghi lại lỗi và thời gian làm.</li>
+        </ul>
+        <div class="out"><b>Đầu ra:</b> 2 lệnh chạy được, kèm biên bản test của member.</div>
+      </div>
+    </div>
+
+    <div class="ms">
+      <div class="when">30/11<small>Thứ Hai · hạn KR</small></div>
+      <div>
+        <h3>5 · Bàn giao</h3>
+        <ul>
+          <li>SOP: cách tạo dashboard mới, cách cập nhật hằng tháng, ai chịu trách nhiệm, hạn cập nhật (trước ngày 5).</li>
+          <li>Training Team Leader 1 buổi, có record.</li>
+          <li>Lịch rollout các dự án còn lại, chia theo team và theo đợt.</li>
+        </ul>
+        <div class="out"><b>Đầu ra:</b> gửi anh template chung v1.0, khung customize, skill, SOP và lịch rollout.</div>
+      </div>
+    </div>
+
+    <div class="ms">
+      <div class="when">Tháng 12<small>Rollout</small></div>
+      <div>
+        <h3>6 · Rollout các dự án còn lại</h3>
+        <ul>
+          <li>Đợt 1 (15/12): dự án Enterprise và SEO Global.</li>
+          <li>Đợt 2 (31/12): dự án SMEs.</li>
+          <li>Lead dự án tự build theo skill, Phong review từng dashboard trước khi gửi khách.</li>
+          <li>Đo kết quả: số dự án có dashboard chuẩn, thời gian làm report mỗi dự án trước và sau.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Cách đấu nối dữ liệu</h2>
+    <p class="sub">Mọi dự án dùng chung một cấu trúc, nên dự án mới chỉ cần copy template và đổi nguồn data.</p>
+    <div class="flow">
+      <div class="box">
+        <h4>Nguồn dữ liệu</h4>
+        <p><span class="tag">Tự động</span>GSC, GA4 nối thẳng vào Looker Studio.</p>
+        <p><span class="tag">Script / agent</span>SpySERP (ranking), DataForSEO (GEO) đổ vào data hub.</p>
+        <p><span class="tag">Lead / agent</span>Nhận định, action tháng tới, ảnh chụp dự án.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box hub">
+        <h4>Data hub · Google Sheet</h4>
+        <p>Một file cho mỗi dự án, cùng cấu trúc:</p>
+        <p>KPI dự án · Ranking · GEO tracking · Việc tháng tới</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box">
+        <h4>Dashboard Looker Studio</h4>
+        <p><b>Template chung</b> cho SMEs.</p>
+        <p><b>Khung customize</b> cho Enterprise, thêm module theo nhu cầu khách.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="two">
+    <section class="need">
+      <h2>Cần anh chốt</h2>
+      <ol class="dec-list">
+        <li><b>Phạm vi 30/11.</b> Em đề xuất là bộ chuẩn, bản chạy thử và skill như trên, còn rollout toàn bộ dự án làm trong tháng 12. Nếu anh muốn 100% dự án xong trước 30/11 thì em cần Team Leader cùng làm từ 18/11.</li>
+        <li><b>Tài khoản đứng tên dashboard và nguồn data.</b> Em đề xuất một tài khoản chung @gtvseo.com để report không hỏng khi nhân sự nghỉ. Cần chốt trước 18/11, là ngày em bắt đầu dựng khung.</li>
+        <li><b>Phần GEO tracking.</b> Nếu DataForSEO chưa chốt xong chỉ số và chi phí thì bản v1 em để nhập từ data hub, nối API sau.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>Lưu ý</h2>
+      <ul class="note">
+        <li><b>Looker Studio chưa có MCP chính thức.</b> Em đã kiểm tài liệu Google ngày 12/11: API hiện chưa cho agent tự thêm chart, còn MCP Google ra ngày 26/10 là của Looker bản enterprise. Vì vậy agent sẽ chuẩn bị data hub và tạo link copy từ template có sẵn, mỗi dự án còn 1 bước mở link và bấm lưu. Khung customize em làm thành bộ module có sẵn để các bạn copy và chỉnh.</li>
+        <li><b>Một số dự án có thể thiếu quyền GSC, GA4.</b> Em sẽ liệt kê khi lập lịch rollout và nhờ Account xin quyền trước từng đợt.</li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>Phong · SEO Manager · PSP</footer>
+</div>
+</body>
+</html>
